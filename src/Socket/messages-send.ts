@@ -1299,7 +1299,7 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 					id: btn.id
 				})
 			}))
-		},
+		} as any,
 		{
 			logger,
 			userJid: authState.creds.me!.id,
@@ -1338,7 +1338,7 @@ sendUrlButton: async (
 					})
 				}
 			]
-		},
+		} as any,
 		{
 			logger,
 			userJid: authState.creds.me!.id,
@@ -1377,7 +1377,7 @@ sendListMessage: async (
 			footer,
 			buttonText,
 			sections
-		},
+		} as any,
 		{
 			logger,
 			userJid: authState.creds.me!.id,
