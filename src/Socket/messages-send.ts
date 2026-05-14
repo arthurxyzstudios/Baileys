@@ -1279,77 +1279,118 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 		updateMemberLabel,
 
 		sendInteractiveButtons: async (
-			jid: string,
-			text: string,
-			buttons: Array<{ text: string; id: string }>,
-			title: string = '',
-			footer: string = ''
-		) => {
-			const interactiveButtons = buttons.map(btn => ({
+	jid: string,
+	text: string,
+	buttons: Array<{ text: string; id: string }>,
+	title: string = '',
+	footer: string = ''
+) => {
+
+	const msg = await generateWAMessage(
+		jid,
+		{
+			text,
+			footer,
+			title,
+			interactiveButtons: buttons.map(btn => ({
 				name: 'quick_reply',
 				buttonParamsJson: JSON.stringify({
 					display_text: btn.text,
 					id: btn.id
 				})
 			}))
-
-			return await sock.sendMessage(jid, {
-				text,
-				title,
-				footer,
-				interactiveButtons
-			})
 		},
+		{
+			logger,
+			userJid: authState.creds.me!.id,
+			upload: waUploadToServer
+		}
+	)
 
-		sendUrlButton: async (
-			jid: string,
-			text: string,
-			buttonText: string,
-			url: string,
-			title: string = '',
-			footer: string = ''
-		) => {
-			return await sock.sendMessage(jid, {
-				text,
-				title,
-				footer,
-				interactiveButtons: [
-					{
-						name: 'cta_url',
-						buttonParamsJson: JSON.stringify({
-							display_text: buttonText,
-							url
-						})
-					}
-				]
-			})
-		},
+	await relayMessage(jid, msg.message!, {
+		messageId: msg.key.id!
+	})
 
-		sendListMessage: async (
-			jid: string,
-			title: string,
-			text: string,
-			sections: Array<{
-				title: string
-				rows: Array<{
-					title: string
-					rowId: string
-					description?: string
-				}>
-			}>,
-			buttonText: string = 'Pilih',
-			footer: string = ''
-		) => {
-			return await sock.sendMessage(jid, {
-				text,
-				title,
-				footer,
-				list: {
-					buttonText,
-					sections
+	return msg
+},
+
+sendUrlButton: async (
+	jid: string,
+	text: string,
+	buttonText: string,
+	url: string,
+	title: string = '',
+	footer: string = ''
+) => {
+
+	const msg = await generateWAMessage(
+		jid,
+		{
+			text,
+			footer,
+			title,
+			interactiveButtons: [
+				{
+					name: 'cta_url',
+					buttonParamsJson: JSON.stringify({
+						display_text: buttonText,
+						url
+					})
 				}
-			})
+			]
 		},
+		{
+			logger,
+			userJid: authState.creds.me!.id,
+			upload: waUploadToServer
+		}
+	)
+
+	await relayMessage(jid, msg.message!, {
+		messageId: msg.key.id!
+	})
+
+	return msg
+},
+
+sendListMessage: async (
+	jid: string,
+	title: string,
+	text: string,
+	sections: Array<{
+		title: string
+		rows: Array<{
+			title: string
+			rowId: string
+			description?: string
+		}>
+	}>,
+	buttonText: string = 'Pilih',
+	footer: string = ''
+) => {
+
+	const msg = await generateWAMessage(
+		jid,
+		{
+			text,
+			title,
+			footer,
+			buttonText,
+			sections
+		},
+		{
+			logger,
+			userJid: authState.creds.me!.id,
+			upload: waUploadToServer
+		}
+	)
+
+	await relayMessage(jid, msg.message!, {
+		messageId: msg.key.id!
+	})
+
+	return msg
+},
 
 		updateMediaMessage: async (message: WAMessage) => {
 			const content = assertMediaContent(message.message)
