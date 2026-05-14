@@ -1620,6 +1620,55 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 			await messageMutex.mutex(async () => {
 				await decrypt()
 
+				if (msg.message?.interactiveResponseMessage) {
+    const interactiveResp = msg.message.interactiveResponseMessage;
+    const nativeFlow = interactiveResp.nativeFlowResponseMessage;
+    
+    if (nativeFlow) {
+        let buttonId: string | undefined;
+        let buttonText: string | undefined;
+        
+        try {
+            const params = JSON.parse(nativeFlow.paramsJson || '{}');
+            buttonId = params.id;
+            buttonText = params.display_text;
+        } catch(e) {
+            buttonText = nativeFlow.name;
+        }
+        
+        msg.message.conversation = buttonText || nativeFlow.name;
+        (msg as any).buttonData = {
+            id: buttonId,
+            text: buttonText,
+            type: 'interactive_reply'
+        };
+        
+        logger.debug({ buttonId, buttonText, from: msg.key.remoteJid }, 'user clicked button');
+    }
+}
+
+if (msg.message?.templateButtonReplyMessage) {
+    const templateReply = msg.message.templateButtonReplyMessage;
+    msg.message.conversation = templateReply.displayText || templateReply.selectedId;
+    (msg as any).buttonData = {
+        id: templateReply.selectedId,
+        text: templateReply.displayText,
+        type: 'template_reply'
+    };
+}
+
+if (msg.message?.listResponseMessage) {
+    const listReply = msg.message.listResponseMessage;
+    msg.message.conversation = listReply.singleSelectReply?.selectedRowDisplayText || 
+                               listReply.title || 
+                               'list_selected';
+    (msg as any).buttonData = {
+        id: listReply.singleSelectReply?.selectedRowId,
+        text: listReply.singleSelectReply?.selectedRowDisplayText,
+        type: 'list_reply'
+    };
+}
+
 				if (msg.key?.remoteJid && msg.key?.id && msg.message && messageRetryManager) {
 					messageRetryManager.addRecentMessage(msg.key.remoteJid, msg.key.id, msg.message)
 				}
