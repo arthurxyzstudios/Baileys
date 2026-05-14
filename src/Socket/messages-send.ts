@@ -1278,6 +1278,52 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 		getUSyncDevices,
 		messageRetryManager,
 		updateMemberLabel,
+
+    // Tambahin setelah userDevicesCache, sebelum sendMessage
+sendInteractiveButtons: async (jid: string, text: string, buttons: Array<{text: string, id: string}>, title: string = '', footer: string = '') => {
+    const interactiveButtons = buttons.map(btn => ({
+        name: "quick_reply",
+        buttonParamsJson: JSON.stringify({
+            display_text: btn.text,
+            id: btn.id
+        })
+    }));
+    
+    return await sock.sendMessage(jid, {
+        text: text,
+        title: title,
+        footer: footer,
+        interactiveButtons: interactiveButtons
+    });
+},
+
+sendUrlButton: async (jid: string, text: string, buttonText: string, url: string, title: string = '', footer: string = '') => {
+    return await sock.sendMessage(jid, {
+        text: text,
+        title: title,
+        footer: footer,
+        interactiveButtons: [{
+            name: "cta_url",
+            buttonParamsJson: JSON.stringify({
+                display_text: buttonText,
+                url: url
+            })
+        }]
+    });
+},
+
+sendListMessage: async (jid: string, title: string, text: string, sections: Array<{title: string, rows: Array<{title: string, rowId: string, description?: string}>}>, buttonText: string = 'Pilih', footer: string = '') => {
+    return await sock.sendMessage(jid, {
+        text: text,
+        title: title,
+        footer: footer,
+        list: {
+            buttonText: buttonText,
+            sections: sections
+        }
+    });
+},
+		
 		updateMediaMessage: async (message: WAMessage) => {
 			const content = assertMediaContent(message.message)
 			const mediaKey = content.mediaKey!
