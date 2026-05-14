@@ -1633,38 +1633,42 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
             buttonId = params.id;
             buttonText = params.display_text;
         } catch(e) {
-            buttonText = nativeFlow.name;
+            buttonText = nativeFlow.name || undefined;
         }
         
-        msg.message.conversation = buttonText || nativeFlow.name;
+        if (buttonText) {
+            msg.message.conversation = buttonText;
+        }
+        
         (msg as any).buttonData = {
             id: buttonId,
             text: buttonText,
             type: 'interactive_reply'
         };
-        
-        logger.debug({ buttonId, buttonText, from: msg.key.remoteJid }, 'user clicked button');
     }
 }
 
 if (msg.message?.templateButtonReplyMessage) {
     const templateReply = msg.message.templateButtonReplyMessage;
-    msg.message.conversation = templateReply.displayText || templateReply.selectedId;
+    const selectedId = templateReply.selectedId;
+    const displayText = (templateReply as any).displayText || selectedId;
+    msg.message.conversation = displayText;
     (msg as any).buttonData = {
-        id: templateReply.selectedId,
-        text: templateReply.displayText,
+        id: selectedId,
+        text: displayText,
         type: 'template_reply'
     };
 }
 
 if (msg.message?.listResponseMessage) {
     const listReply = msg.message.listResponseMessage;
-    msg.message.conversation = listReply.singleSelectReply?.selectedRowDisplayText || 
-                               listReply.title || 
-                               'list_selected';
+    const singleSelect = listReply.singleSelectReply;
+    const selectedRowDisplayText = singleSelect ? (singleSelect as any).selectedRowDisplayText : undefined;
+    const selectedRowId = singleSelect ? (singleSelect as any).selectedRowId : undefined;
+    msg.message.conversation = selectedRowDisplayText || listReply.title || 'list_selected';
     (msg as any).buttonData = {
-        id: listReply.singleSelectReply?.selectedRowId,
-        text: listReply.singleSelectReply?.selectedRowDisplayText,
+        id: selectedRowId,
+        text: selectedRowDisplayText,
         type: 'list_reply'
     };
 }
