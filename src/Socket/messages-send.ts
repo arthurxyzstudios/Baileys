@@ -1269,7 +1269,6 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 		sendReceipts,
 		readMessages,
 		refreshMediaConn,
-		// Function (not getter) so the spread in chats.ts preserves the live closure binding.
 		getMediaHost: () => mediaHost,
 		waUploadToServer,
 		fetchPrivacySettings,
@@ -1279,79 +1278,79 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 		messageRetryManager,
 		updateMemberLabel,
 
-    sendInteractiveButtons: async (
-	jid: string,
-	text: string,
-	buttons: Array<{ text: string; id: string }>,
-	title: string = '',
-	footer: string = ''
-) => {
-	const interactiveButtons = buttons.map(btn => ({
-		name: 'quick_reply',
-		buttonParamsJson: JSON.stringify({
-			display_text: btn.text,
-			id: btn.id
-		})
-	}))
-
-	return await sendMessage(jid, {
-		text,
-		title,
-		footer,
-		interactiveButtons
-	})
-},
-
-sendUrlButton: async (
-	jid: string,
-	text: string,
-	buttonText: string,
-	url: string,
-	title: string = '',
-	footer: string = ''
-) => {
-	return await sendMessage(jid, {
-		text,
-		title,
-		footer,
-		interactiveButtons: [
-			{
-				name: 'cta_url',
+		sendInteractiveButtons: async (
+			jid: string,
+			text: string,
+			buttons: Array<{ text: string; id: string }>,
+			title: string = '',
+			footer: string = ''
+		) => {
+			const interactiveButtons = buttons.map(btn => ({
+				name: 'quick_reply',
 				buttonParamsJson: JSON.stringify({
-					display_text: buttonText,
-					url
+					display_text: btn.text,
+					id: btn.id
 				})
-			}
-		]
-	})
-},
+			}))
 
-sendListMessage: async (
-	jid: string,
-	title: string,
-	text: string,
-	sections: Array<{
-		title: string
-		rows: Array<{
-			title: string
-			rowId: string
-			description?: string
-		}>
-	}>,
-	buttonText: string = 'Pilih',
-	footer: string = ''
-) => {
-	return await sendMessage(jid, {
-		text,
-		title,
-		footer,
-		list: {
-			buttonText,
-			sections
-		}
-	})
-},
-		
+			return await sock.sendMessage(jid, {
+				text,
+				title,
+				footer,
+				interactiveButtons
+			})
+		},
+
+		sendUrlButton: async (
+			jid: string,
+			text: string,
+			buttonText: string,
+			url: string,
+			title: string = '',
+			footer: string = ''
+		) => {
+			return await sock.sendMessage(jid, {
+				text,
+				title,
+				footer,
+				interactiveButtons: [
+					{
+						name: 'cta_url',
+						buttonParamsJson: JSON.stringify({
+							display_text: buttonText,
+							url
+						})
+					}
+				]
+			})
+		},
+
+		sendListMessage: async (
+			jid: string,
+			title: string,
+			text: string,
+			sections: Array<{
+				title: string
+				rows: Array<{
+					title: string
+					rowId: string
+					description?: string
+				}>
+			}>,
+			buttonText: string = 'Pilih',
+			footer: string = ''
+		) => {
+			return await sock.sendMessage(jid, {
+				text,
+				title,
+				footer,
+				list: {
+					buttonText,
+					sections
+				}
+			})
+		},
+
 		updateMediaMessage: async (message: WAMessage) => {
 			const content = assertMediaContent(message.message)
 			const mediaKey = content.mediaKey!
